@@ -56,7 +56,7 @@ brew install git npm  # MacOS
 
 ```sh
 mkdir -p ~/.config/nvim
-git clone https://github.com/Zproger/GenesisNvim.git ~/.config/nvim
+git clone https://github.com/Timokrut/nvim-cfg.git ~/.config/nvim
 nvim -c "MasonInstall pyright ruff-lsp mypy debugpy rust-analyzer"
 ```
 
