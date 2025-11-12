@@ -1,128 +1,70 @@
-
--- Setup language servers.
+-- LSP setup (новый стиль для Neovim 0.11)
 local lspconfig = require('lspconfig')
-lspconfig.pyright.setup {
-	settings = {
-	    pyright = {
-	      -- Using Ruff's import organizer
-	      disableOrganizeImports = true,
-	    },
-	    python = {
-	      analysis = {
-	        -- Ignore all files for analysis to exclusively use Ruff for linting
-	        ignore = { '*' },
-	        },
-		},
-	},	
-}
 
-lspconfig.tsserver.setup({})
-lspconfig.rust_analyzer.setup {
-  -- Server-specific settings. See `:help lspconfig-setup`
+-- Pyright
+lspconfig.pyright.setup {
   settings = {
-    ['rust-analyzer'] = {},
+    pyright = { disableOrganizeImports = true },
+    python = { analysis = { ignore = { '*' } } },
   },
 }
 
--- Setup Ruff Linter
-lspconfig.ruff_lsp.setup {
+-- Typescript (новое имя — ts_ls)
+lspconfig.ts_ls.setup {}
+
+-- Rust
+lspconfig.rust_analyzer.setup {}
+
+-- Ruff (новое имя)
+lspconfig.ruff.setup {
   init_options = {
     settings = {
-      -- Any extra CLI arguments for `ruff` go here.
       args = {
-		"--select=E,F,UP,N,I,ASYNC,S,PTH",
-		"--line-length=79",
-		"--respect-gitignore",  -- Исключать из сканирования файлы в .gitignore
-      	"--target-version=py311"
+        "--select=E,F,UP,N,I,ASYNC,S,PTH",
+        "--line-length=79",
+        "--respect-gitignore",
+        "--target-version=py311",
       },
-    }
-  }
+    },
+  },
 }
 
-lspconfig.clangd.setup{}
+-- Clang
+lspconfig.clangd.setup {}
 
-lspconfig.jdtls.setup({
+-- Java
+lspconfig.jdtls.setup {
   settings = {
     java = {
-      imports = {
-        gradle = {
-          wrapper = {
-            checksums = {
-              ["7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172"] = true,
-            },
-          },
-        },
-      },
-      project = {
-        sourcePaths = { "src" },
-        referencedLibraries = { "lib/**/*.jar" }
-      },
       configuration = {
         runtimes = {
           {
             name = "JavaSE-17",
             path = "/usr/lib/jvm/java-17-openjdk",
-            default = true
-          }
-        }
+            default = true,
+          },
+        },
       },
-      completion = {
-        favoriteStaticMembers = {
-          "org.junit.Assert.*",
-          "org.junit.jupiter.api.Assertions.*"
-        }
-      },
-      sources = {
-        organizeImports = {
-          starThreshold = 9999,
-          staticStarThreshold = 9999
-        }
-      }
-    }
+    },
   },
-  init_options = {
-    bundles = {
-      vim.fn.glob("~/.local/share/nvim/mason/packages/java-debug-adapter/extension/server/com.microsoft.java.debug.plugin-*.jar")
-    }
-  }
-})
+}
 
--- Global mappings.
--- See `:help vim.diagnostic.*` for documentation on any of the below functions
+-- Диагностики
 vim.keymap.set('n', '<space>e', vim.diagnostic.open_float)
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
--- vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist)
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
 
--- Use LspAttach autocommand to only map the following keys
--- after the language server attaches to the current buffer
+-- Автоматическая настройка после подключения LSP
 vim.api.nvim_create_autocmd('LspAttach', {
-  group = vim.api.nvim_create_augroup('UserLspConfig', {}),
   callback = function(ev)
-    -- Enable completion triggered by <c-x><c-o>
-    vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
-
-    -- Buffer local mappings.
-    -- See `:help vim.lsp.*` for documentation on any of the below functions
     local opts = { buffer = ev.buf }
-    vim.keymap.set('n', 'LD', vim.lsp.buf.declaration, opts)
+    vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
     vim.keymap.set('n', 'Ld', vim.lsp.buf.definition, opts)
     vim.keymap.set('n', 'Lk', vim.lsp.buf.hover, opts)
-    vim.keymap.set('n', 'L', vim.lsp.buf.implementation, opts)
-    vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
-    
-    -- vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, opts)
-    -- vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
-    -- vim.keymap.set('n', '<space>wl', function()
-    --   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-    -- end, opts)
-    
-    -- TODO: Используется повторно, необходимо вырезать в след.версии
-    -- vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, opts)
-    vim.keymap.set({ 'n', 'v' }, '<space>r', vim.lsp.buf.code_action, opts)
-    vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+    vim.keymap.set('n', '<space>r', vim.lsp.buf.code_action, opts)
     vim.keymap.set('n', '<space>f', function()
       vim.lsp.buf.format { async = true }
     end, opts)
   end,
 })
+
